@@ -1,5 +1,42 @@
 var request = indexedDB.open('todo', 1);
 var requestDone = indexedDB.open('done', 1);
+let dbJson = [];
+
+fetch('http://localhost:3000/dbJson')
+    .then(res => res.json())
+    .then(json => {
+        dbJson = dbJson.concat(json);
+    })
+    .catch(err => {
+        console.log(err);
+    });
+
+const addTask = item => {
+    fetch('http://localhost:3000/dbJson', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(item)
+    })
+    .then(res => res.json())
+    .then(json => {
+        dbJson.push(json);
+    })
+}
+
+const removeTask = id => {
+    fetch(`http://localhost:3000/dbJson/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(res => res.json())
+    .then(json => {
+        dbJson = dbJson.filter(item => item.id !== id);
+    })
+}
 
 request.onupgradeneeded = function (e) {
     var db = e.target.result;
@@ -40,23 +77,35 @@ requestDone.onerror = function (e) {
     console.log('Error: Could Not Open Database');
 };
 
-
 function addTodo() {
     var name = document.getElementById('item').value;
 
-    var trasaction = db.transaction('todo', "readwrite");
-    var store = trasaction.objectStore('todo');
+    var transaction = db.transaction('todo', "readwrite");
+    var store = transaction.objectStore('todo');
+
+    // fetch(`http://localhost:3000/todolist/${store}`, {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json'
+    //     }
+    // })
+    // .then(res => res.json())
+    // .then(json => {
+    //     todoList = todoList.filter(item => item.id !== id);
+    //     render(todoList);
+    // });
+    
     if(name != ''){
         var todo = {
         name: name
         };
         var request = store.add(todo);
-
+        console.log(request);
         request.onsuccess = function (e) {
+            addTask(todo);
             document.getElementById('item').value = '';
             showTodos();
         };
-
         request.onerror = function (e) {
             console.log("Error: ", e.target.error.name);
         }
@@ -89,6 +138,7 @@ function deleteItem(id) {
     var request = store.delete(id);
 
     request.onsuccess = function () {
+        removeTask(id);
         console.log('todo deleted');
         showTodos();
         showDone();
@@ -134,7 +184,6 @@ function processTodo(todo) {
         var store = tx.objectStore('done');
         deleteItem(todo.result.id);
         var name = todo.result.name;
-        console.log(name);
         var item = ({
             name: name
         });
