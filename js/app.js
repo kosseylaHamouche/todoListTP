@@ -82,18 +82,6 @@ function addTodo() {
 
     var transaction = db.transaction('todo', "readwrite");
     var store = transaction.objectStore('todo');
-
-    // fetch(`http://localhost:3000/todolist/${store}`, {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json'
-    //     }
-    // })
-    // .then(res => res.json())
-    // .then(json => {
-    //     todoList = todoList.filter(item => item.id !== id);
-    //     render(todoList);
-    // });
     
     if(name != ''){
         var todo = {
